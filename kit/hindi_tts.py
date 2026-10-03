@@ -123,3 +123,32 @@ class Voice:
         with wave.open(out_wav, 'wb') as w:
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(self.sr); w.writeframes((a * 32767).astype(np.int16).tobytes())
         return durs
+
+
+class KokoroVoice:
+    """Kokoro v1.0 multi-lang ONNX (sherpa-onnx export) driven by the same own phonemizer.
+    Model dir: https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+    Hindi speakers: hf_alpha=31, hf_beta=32, hm_omega=33, hm_psi=34. Output 24 kHz."""
+    SPK = {'hf_alpha': 31, 'hf_beta': 32, 'hm_omega': 33, 'hm_psi': 34}
+    def __init__(self, model_dir, speaker='hm_omega', speed=1.0):
+        self.ids = {}
+        for line in open(model_dir + '/tokens.txt', encoding='utf-8').read().splitlines():
+            if not line.strip('\n'): continue
+            sym, num = line.rsplit(' ', 1); self.ids[sym] = int(num)
+        v = np.fromfile(model_dir + '/voices.bin', dtype=np.float32).reshape(-1, 510, 256)
+        self.style = v[self.SPK[speaker]]
+        self.sess = ort.InferenceSession(model_dir + '/model.onnx', providers=['CPUExecutionProvider'])
+        self.sr, self.speed, self.missing = 24000, np.array([speed], dtype=np.float32), set()
+
+    def synth(self, sentence):
+        ph = phonemize(sentence).replace('̪', '').replace('tʃ', 'ʧ').replace('dʒ', 'ʤ').replace('ɦ', 'h')
+        ids = []
+        for ch in ph:
+            if ch in self.ids: ids.append(self.ids[ch])
+            else: self.missing.add(ch)
+        ids = ids[:508]
+        x = np.array([[0] + ids + [0]], dtype=np.int64)
+        y = self.sess.run(None, {'tokens': x, 'style': self.style[len(ids)][None, :], 'speed': self.speed})[0]
+        return np.asarray(y).squeeze().astype(np.float32)
+
+    narrate = Voice.narrate
