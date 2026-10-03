@@ -23,3 +23,8 @@ Owner's standing instruction (3 Oct 2026): publish directly as public, no approv
 8. Mark the topic done in `TOPICS.md`, commit, push.
 
 The workspace cannot reach ElevenLabs or YouTube directly. GitHub is the only way files leave it.
+
+## Shorts (tested on video 01)
+- One Short per long video: vertical 1080x1920, under 40 seconds, 4 beats: hook, what the tool shows, the one key action, end card pointing to the full video on the channel.
+- Separate short Hindi narration (one TTS take). Same pipeline as the long video: record with `video-01/src/short.py` as the reference (top caption band, spotlight, panel), push `video-NN/short-hi.mp4`, attach, compose, upload.
+- Title ends with `#Shorts`. Description: one line plus the full video link.
