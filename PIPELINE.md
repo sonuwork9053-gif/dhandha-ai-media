@@ -1,0 +1,25 @@
+# Dhandha AI — production runbook
+
+Channel: Dhandha AI (@dhandhaai), channel ID `UC8ctVutqcPP7NTxzPQjazZQ`.
+Niche: AI for small business owners. Each video = one real business task done with a real, working tool, shown on screen.
+Owner's standing instruction (3 Oct 2026): publish directly as public, no approval step.
+
+## Rules
+- Build a real working tool first and test it. The video shows that tool, nothing mocked.
+- Never invent a number, a result or a source. On-screen data is sample data and is labelled "Sample data".
+- Hindi narration (Devanagari text for TTS). Description says the narration is an AI voice.
+- Title and thumbnail carry different words. Thumbnail: navy `#0B1220`, yellow `#FFC400`, max 4 words big.
+- Look at a contact sheet of frames before uploading. Fix overlaps and cut-off text first.
+- Audio cannot be listened to from the workspace. Say so in the run report.
+
+## Pipeline (tested end to end on video 01)
+1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright.
+2. Write the script: 5 hooks scored with `hookscore.py` (repo: Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats.
+3. ElevenLabs `creative_generate_speech`: whole Hindi narration in one call, `generations_count: 1`, model `eleven_multilingual_v2`, voice `zs7UfyHqCCmny7uTxCYi` (Ruhaan). Poll `creative_get_flow_run_status` for `duration_secs`.
+4. Record the screen with Playwright (`record_video_dir`, 1920x1080), beat lengths = narration length split by character count. See `video-01/src/record.py` for the director overlay (captions, spotlight, cursor, panels). Convert to mp4 with ffmpeg.
+5. Commit `video-NN/screen-hi.mp4` and `video-NN/thumb.jpg` to this repo and push to `main`.
+6. ElevenLabs `creative_attach_reference_file` with the raw.githubusercontent.com URL into the same flow as the narration, then `creative_add_flow_node` (`composition`, `eleven_composition`, `connect_from` = video node + TTS node), `creative_run_flow_nodes` with `generations_count: 1`. Poll until completed, take `master_url`.
+7. Zapier YouTube `upload_video`: `video` = master_url, `thumbnail` = raw GitHub URL, `privacy_status: public`, `category_id: "28"`, `default_language: hi`, `made_for_kids: false`.
+8. Mark the topic done in `TOPICS.md`, commit, push.
+
+The workspace cannot reach ElevenLabs or YouTube directly. GitHub is the only way files leave it.
