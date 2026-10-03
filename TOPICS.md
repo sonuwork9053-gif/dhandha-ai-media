@@ -3,7 +3,7 @@
 Take the first unchecked topic. After publishing, tick it and add the video links. Each topic names the business used as the example; keep the business different from the previous video.
 
 - [x] 01 RO service: customer follow-up register with WhatsApp reminders — https://www.youtube.com/watch?v=kicWp8y8u8Y (Short: https://www.youtube.com/watch?v=vYfSIGHQaAY)
-- [ ] 02 Kirana shop: udhaar khata — who owes how much, one-tap WhatsApp reminder
+- [x] 02 Kirana shop: udhaar khata — https://www.youtube.com/watch?v=CNu_ywHzdds
 - [ ] 03 Tailor / boutique: order and delivery-date tracker with "ready hai" message
 - [ ] 04 Coaching class: fees due register with monthly reminder
 - [ ] 05 Mobile repair shop: job card and status message for the customer

@@ -10,23 +10,31 @@ Owner's standing instruction (3 Oct 2026): publish directly as public, no approv
 - Hindi narration (Devanagari text for TTS). Description says the narration is an AI voice.
 - Title and thumbnail carry different words. Thumbnail: navy `#0B1220`, yellow `#FFC400`, max 4 words big.
 - Look at a contact sheet of frames before uploading. Fix overlaps and cut-off text first.
-- Audio cannot be listened to from the workspace. Say so in the run report.
+- Audio cannot be listened to from the workspace. Say so in the run report. The owner approved the free voices 'Pratham' and 'Rohan' on 3 Oct 2026; Pratham is the default (its pace matches the earlier narration).
 
-## Pipeline (tested end to end on video 01)
-1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright.
-2. Write the script: 5 hooks scored with `hookscore.py` (repo: Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats.
-3. ElevenLabs `creative_generate_speech`: whole Hindi narration in one call, `generations_count: 1`, model `eleven_multilingual_v2`, voice `zs7UfyHqCCmny7uTxCYi` (Ruhaan). Poll `creative_get_flow_run_status` for `duration_secs`.
-4. Record the screen with Playwright (`record_video_dir`, 1920x1080). Beat lengths come from `kit/timing.py` (`beat_durations(beats, total_seconds)`), not from raw character counts: the owner reported captions and voice drifting slightly on video 01, which used character counts. Put each beat's key action in the middle of the beat so a one-second drift does not show. See `video-01/src/record.py` for the director overlay (captions, spotlight, cursor, panels). Convert to mp4 with ffmpeg.
-5. Commit `video-NN/screen-hi.mp4` and `video-NN/thumb.jpg` to this repo and push to `main`.
-6. ElevenLabs `creative_attach_reference_file` with the raw.githubusercontent.com URL into the same flow as the narration, then `creative_add_flow_node` (`composition`, `eleven_composition`, `connect_from` = video node + TTS node), `creative_run_flow_nodes` with `generations_count: 1`. Poll until completed, take `master_url`.
-7. Zapier YouTube `upload_video`: `video` = master_url, `thumbnail` = raw GitHub URL, `privacy_status: public`, `category_id: "28"`, `default_language: hi`, `made_for_kids: false`.
-8. Mark the topic done in `TOPICS.md`, commit, push.
+## Pipeline (current, tested end to end on video 02 — free voice, no ElevenLabs)
+ElevenLabs is NOT used any more: the owner's free ElevenLabs account was disabled on 3 Oct 2026. Do not call ElevenLabs tools.
 
-The workspace cannot reach ElevenLabs or YouTube directly. GitHub is the only way files leave it.
+0. Voice model (data file, about 67 MB, not kept in this repo):
+   `curl -sSL -o /tmp/pratham.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2 && tar xjf /tmp/pratham.tar.bz2 -C /tmp`
+   Model path: `/tmp/vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx`. It runs with the pre-installed `onnxruntime` through `kit/hindi_tts.py` (own phonemizer). Do NOT run the Piper binary or any other downloaded program — that is blocked. If `onnxruntime` is missing or the model cannot be downloaded, stop and report.
+1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright (see `video-02/src/test.py`).
+2. Write the script: 5 hooks scored with `hookscore.py` (repo Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats. Save the beats as `video-NN/src/beats.json` (Devanagari; spell numbers in words; English words are handled by `LATIN`/`SPOKEN` in `kit/hindi_tts.py` — add new ones there).
+3. Narration: `Voice(model).narrate(beats, "narr.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation.
+4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur)` — see `video-02/src/record.py`. Exact durations mean captions and voice stay in sync.
+5. Join: `ffmpeg -i silent.mp4 -i narr.wav -c:v copy -c:a aac -b:a 128k -shortest -movflags +faststart video-NN/video-hi.mp4`.
+6. Look at a contact sheet of frames (one per beat). Fix overlaps or cut-off text and re-record.
+7. Thumbnail `video-NN/thumb.jpg` (see `video-02/src/thumb.html`).
+8. Publish the tool page (`tools/<slug>.html`, add to `index.html`), commit everything except wav/silent files, push to `main`.
+9. Confirm the tool page URL loads, then Zapier YouTube `upload_video`: `video` = `https://raw.githubusercontent.com/sonuwork9053-gif/dhandha-ai-media/main/video-NN/video-hi.mp4`, `thumbnail` = the raw URL of thumb.jpg, `privacy_status: public`, `category_id: "28"`, `default_language: hi`, `default_audio_language: hi`, `made_for_kids: false`. Chapters in the description come from the exact beat durations (each chapter at least 10 seconds).
+10. Zapier YouTube raw requests: add to playlist `PLVDr12VSeYo4` (POST playlistItems), add English localization (PUT videos?part=localizations), post one channel comment with a question (POST commentThreads).
+11. Tick the topic in `TOPICS.md` with the links, commit, push.
 
-## Shorts (tested on video 01)
+The workspace cannot reach YouTube directly; GitHub raw URLs are how files reach Zapier.
+
+## Shorts
 - One Short per long video: vertical 1080x1920, under 40 seconds, 4 beats: hook, what the tool shows, the one key action, end card pointing to the full video on the channel.
-- Separate short Hindi narration (one TTS take). Same pipeline as the long video: record with `video-01/src/short.py` as the reference (top caption band, spotlight, panel), push `video-NN/short-hi.mp4`, attach, compose, upload.
+- Separate short Hindi narration made with `kit/hindi_tts.py` (exact durations). Record vertically with `video-01/src/short.py` as the layout reference (top caption band, spotlight, panel) but drive the beat timing from the exact durations, join audio with ffmpeg, push `video-NN/short-hi.mp4`, upload from the raw GitHub URL.
 - Title ends with `#Shorts`. Description: one line plus the full video link.
 
 ## Topics and variety (owner's instruction, 3 Oct 2026)
