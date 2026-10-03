@@ -16,7 +16,7 @@ Owner's standing instruction (3 Oct 2026): publish directly as public, no approv
 1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright.
 2. Write the script: 5 hooks scored with `hookscore.py` (repo: Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats.
 3. ElevenLabs `creative_generate_speech`: whole Hindi narration in one call, `generations_count: 1`, model `eleven_multilingual_v2`, voice `zs7UfyHqCCmny7uTxCYi` (Ruhaan). Poll `creative_get_flow_run_status` for `duration_secs`.
-4. Record the screen with Playwright (`record_video_dir`, 1920x1080), beat lengths = narration length split by character count. See `video-01/src/record.py` for the director overlay (captions, spotlight, cursor, panels). Convert to mp4 with ffmpeg.
+4. Record the screen with Playwright (`record_video_dir`, 1920x1080). Beat lengths come from `kit/timing.py` (`beat_durations(beats, total_seconds)`), not from raw character counts: the owner reported captions and voice drifting slightly on video 01, which used character counts. Put each beat's key action in the middle of the beat so a one-second drift does not show. See `video-01/src/record.py` for the director overlay (captions, spotlight, cursor, panels). Convert to mp4 with ffmpeg.
 5. Commit `video-NN/screen-hi.mp4` and `video-NN/thumb.jpg` to this repo and push to `main`.
 6. ElevenLabs `creative_attach_reference_file` with the raw.githubusercontent.com URL into the same flow as the narration, then `creative_add_flow_node` (`composition`, `eleven_composition`, `connect_from` = video node + TTS node), `creative_run_flow_nodes` with `generations_count: 1`. Poll until completed, take `master_url`.
 7. Zapier YouTube `upload_video`: `video` = master_url, `thumbnail` = raw GitHub URL, `privacy_status: public`, `category_id: "28"`, `default_language: hi`, `made_for_kids: false`.
@@ -28,3 +28,9 @@ The workspace cannot reach ElevenLabs or YouTube directly. GitHub is the only wa
 - One Short per long video: vertical 1080x1920, under 40 seconds, 4 beats: hook, what the tool shows, the one key action, end card pointing to the full video on the channel.
 - Separate short Hindi narration (one TTS take). Same pipeline as the long video: record with `video-01/src/short.py` as the reference (top caption band, spotlight, panel), push `video-NN/short-hi.mp4`, attach, compose, upload.
 - Title ends with `#Shorts`. Description: one line plus the full video link.
+
+## Topics and variety (owner's instruction, 3 Oct 2026)
+- Choose the topic yourself. Every video uses a different kind of small business as its example (RO service, kirana shop, tailor, coaching class, salon, medical store, tiffin service, mobile repair, hardware shop, photographer...). Do not repeat the same business type two days in a row.
+- The example is an illustrative scenario with sample data. Never present it as a real customer's story or claim real results.
+- When TOPICS.md runs out, add ten new topics in the same style and continue.
+- Goal: reach YouTube Partner Program thresholds as fast as honestly possible. No bought views, sub4sub or link spam.
