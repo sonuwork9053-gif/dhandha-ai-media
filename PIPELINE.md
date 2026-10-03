@@ -34,3 +34,9 @@ The workspace cannot reach ElevenLabs or YouTube directly. GitHub is the only wa
 - The example is an illustrative scenario with sample data. Never present it as a real customer's story or claim real results.
 - When TOPICS.md runs out, add ten new topics in the same style and continue.
 - Goal: reach YouTube Partner Program thresholds as fast as honestly possible. No bought views, sub4sub or link spam.
+
+## Free tool page for every video (owner enabled GitHub Pages on 3 Oct 2026)
+- Copy each video's tool to `tools/<slug>.html` with the small "Free tool by Dhandha AI" credit line (see `tools/follow-up-register.html`), add it to the list in `index.html`, commit and push.
+- Live URL pattern: `https://sonuwork9053-gif.github.io/dhandha-ai-media/tools/<slug>.html`. Pages takes a few minutes to deploy; fetch the URL and confirm it loads before putting it in a description. Never publish a dead link.
+- First line of every description (Hindi and the English localization): the free tool link.
+- Add each long video to playlist `PLVDr12VSeYo4`, add an English title/description localization, and post one channel comment that asks viewers a question.
