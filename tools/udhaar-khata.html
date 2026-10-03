@@ -1,0 +1,53 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Udhaar Khata</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0B1220;--mut:#5b6678;--line:#dfe4ee;--y:#FFC400;--g:#12925a;--r:#d23b40}
+*{box-sizing:border-box;margin:0}body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px}
+.wrap{max-width:1080px;margin:0 auto}h1{font-size:30px}.sub{color:var(--mut);margin:4px 0 20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}.st b{font-size:28px;display:block}.st span{color:var(--mut);font-size:14px}
+.st.tot b{color:var(--r)}.st.in b{color:var(--g)}
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:1.4fr 1.1fr .9fr 1.1fr auto;gap:10px;align-items:end;margin-bottom:20px}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.add{background:var(--ink);color:#fff}.wa{background:#1fa855;color:#fff}.pay{background:#e9edf5;color:var(--ink)}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:12px;align-items:center;margin-bottom:10px}
+.nm{font-weight:700;font-size:18px}.ph,.sv{color:var(--mut);font-size:14px}
+.chip{display:inline-block;font-weight:700;font-size:15px;padding:5px 12px;border-radius:999px}
+.c-due{background:#fde8e9;color:var(--r)}.c-ok{background:#e3f5ec;color:var(--g)}
+.sent{font-size:12px;color:var(--g);margin-top:4px}.acts{display:flex;gap:8px;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.top h2{font-size:18px}.csv{background:var(--y);color:var(--ink)}
+.empty{text-align:center;color:var(--mut);padding:30px}.foot{text-align:center;color:#5b6678;font-size:14px;margin:26px 0 8px}.foot a{color:#0B1220;font-weight:600}
+@media(max-width:800px){form,.row{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="wrap">
+<h1>Udhaar Khata</h1><p class="sub">Kiska kitna baaki hai — ek nazar mein. Data sirf aapke phone/computer mein rehta hai.</p>
+<div class="stats"><div class="st tot"><b id="sTot">₹0</b><span>Kul baaki</span></div><div class="st"><b id="sPpl">0</b><span>Kitne log</span></div><div class="st"><b id="sOut">₹0</b><span>Aaj udhaar diya</span></div><div class="st in"><b id="sIn">₹0</b><span>Aaj paisa aaya</span></div></div>
+<form id="f"><div><label>Customer ka naam</label><input id="name" required placeholder="jaise Ramesh ji"></div><div><label>Mobile (10 ank)</label><input id="phone" required pattern="[0-9]{10}" placeholder="98XXXXXXXX"></div><div><label>Rakam (₹)</label><input id="amt" type="number" min="1" required placeholder="500"></div><div><label>Kya hua</label><select id="type"><option value="out">Udhaar diya</option><option value="in">Paisa aaya</option></select></div><button class="add">+ Jodo</button></form>
+<div class="top"><h2>Baaki list (sabse zyada upar)</h2><button class="csv" id="csv">CSV download</button></div>
+<div id="list"></div>
+<p class="foot">Free tool by <a href="https://www.youtube.com/@dhandhaai">Dhandha AI</a> — YouTube pe dekhiye ye kaise bana.</p></div>
+<script>
+const KEY='udhaar-khata-v1';let mem=[];const $=i=>document.getElementById(i);
+const fName=$('name'),fPhone=$('phone'),fAmt=$('amt'),fType=$('type');
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return mem}};
+const save=d=>{mem=d;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}};
+const today=()=>{const d=new Date();const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const rs=n=>'₹'+Number(n).toLocaleString('en-IN');
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const daysAgo=d=>Math.round((new Date(today())-new Date(d))/864e5);
+function people(d){const m={};for(const e of d){const p=m[e.phone]||(m[e.phone]={phone:e.phone,name:e.name,bal:0,last:e.date,sent:''});p.name=e.name;p.bal+=e.type==='out'?Number(e.amt):-Number(e.amt);if(e.date>p.last)p.last=e.date;if(e.sent)p.sent=e.sent}return Object.values(m).sort((a,b)=>b.bal-a.bal)}
+function msg(p){return `Namaste ${p.name}, aapka ${rs(p.bal)} ka hisaab baaki hai. Jab sahuliyat ho, jama kar dijiye. Dhanyavaad.`}
+function render(){const d=load(),P=people(d),t=today();
+$('sTot').textContent=rs(P.reduce((s,p)=>s+Math.max(p.bal,0),0));$('sPpl').textContent=P.filter(p=>p.bal>0).length;
+$('sOut').textContent=rs(d.filter(e=>e.date===t&&e.type==='out').reduce((s,e)=>s+Number(e.amt),0));
+$('sIn').textContent=rs(d.filter(e=>e.date===t&&e.type==='in').reduce((s,e)=>s+Number(e.amt),0));
+const L=$('list');if(!P.length){L.innerHTML='<div class="empty">Abhi koi entry nahi. Upar se pehla udhaar jodo.</div>';return}
+L.innerHTML=P.map(p=>{const n=daysAgo(p.last);const chip=p.bal>0?`<span class="chip c-due">${rs(p.bal)} baaki</span>`:'<span class="chip c-ok">Hisaab saaf</span>';
+return `<div class="row" data-ph="${esc(p.phone)}"><div><div class="nm">${esc(p.name)}</div><div class="ph">${esc(p.phone)}</div></div><div class="sv">Aakhri entry: ${n===0?'aaj':n+' din pehle'}</div><div>${chip}${p.sent?`<div class="sent">Yaad dilaya: ${esc(p.sent)}</div>`:''}</div><div class="acts">${p.bal>0?'<button class="wa" data-a="wa">WhatsApp yaad dilao</button>':''}<button class="pay" data-a="pay">Paisa aaya</button></div></div>`}).join('')}
+$('f').onsubmit=e=>{e.preventDefault();const d=load();d.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),name:fName.value.trim(),phone:fPhone.value.trim(),amt:fAmt.value,type:fType.value,date:today(),sent:''});save(d);e.target.reset();render()};
+$('list').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const ph=e.target.closest('.row').dataset.ph;const d=load();const p=people(d).find(x=>x.phone===ph);
+if(a==='wa'){window.lastWaUrl='https://wa.me/91'+p.phone+'?text='+encodeURIComponent(msg(p));window.open(window.lastWaUrl,'_blank');const dt=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});d.filter(x=>x.phone===ph).forEach(x=>x.sent=dt);save(d);render()}
+if(a==='pay'){fName.value=p.name;fPhone.value=p.phone;fType.value='in';fAmt.value='';fAmt.focus()}};
+$('csv').onclick=()=>{const d=load();const rows=[['Tareekh','Naam','Mobile','Kya hua','Rakam']].concat(d.map(e=>[e.date,e.name,e.phone,e.type==='out'?'Udhaar diya':'Paisa aaya',e.amt]));
+const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='udhaar-khata.csv';a.click()};
+mem=load();render();
+</script></body></html>

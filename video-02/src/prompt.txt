@@ -1,0 +1,14 @@
+Meri dukaan ke liye ek single-file HTML tool banao, naam "Udhaar Khata".
+
+• Form: customer ka naam, 10 ank ka mobile, rakam,
+  aur "Udhaar diya" ya "Paisa aaya".
+• Ek hi mobile ki saari entry ek khate mein judein.
+• List: sabse zyada baaki upar. Har row pe "₹X baaki" (laal)
+  ya "Hisaab saaf" (hara), aur aakhri entry kitne din pehle.
+• Upar 4 ginti: kul baaki, kitne log, aaj udhaar diya,
+  aaj paisa aaya.
+• "WhatsApp yaad dilao" button: wa.me link, naam aur baaki
+  rakam ke saath pehle se likha vinamra message.
+• "Paisa aaya" button: form mein naam bhar de, bas rakam likhni ho.
+• Data sirf browser ke localStorage mein rahe. CSV download do.
+• Koi server, login ya paid service nahi. Mobile pe bhi chale.
