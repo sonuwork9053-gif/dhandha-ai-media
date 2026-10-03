@@ -1,0 +1,54 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Follow-up Register</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0B1220;--mut:#5b6678;--line:#dfe4ee;--y:#FFC400;--g:#12925a;--r:#d23b40;--o:#c9780a}
+*{box-sizing:border-box;margin:0}body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px}
+.wrap{max-width:1080px;margin:0 auto}h1{font-size:30px}.sub{color:var(--mut);margin:4px 0 20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}.st b{font-size:30px;display:block}.st span{color:var(--mut);font-size:14px}
+.st.late b{color:var(--r)}.st.today b{color:var(--o)}.st.ok b{color:var(--g)}
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:1.4fr 1.1fr 1.1fr 1fr .8fr auto;gap:10px;align-items:end;margin-bottom:20px}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.add{background:var(--ink);color:#fff}.wa{background:#1fa855;color:#fff}.done{background:#e9edf5;color:var(--ink)}.del{background:none;color:var(--mut);padding:10px 6px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;align-items:center;margin-bottom:10px}
+.nm{font-weight:700;font-size:18px}.ph,.sv{color:var(--mut);font-size:14px}
+.chip{display:inline-block;font-weight:700;font-size:14px;padding:5px 12px;border-radius:999px}
+.c-late{background:#fde8e9;color:var(--r)}.c-today{background:#fff1d6;color:var(--o)}.c-soon{background:#e3f5ec;color:var(--g)}
+.sent{font-size:12px;color:var(--g);margin-top:4px}.acts{display:flex;gap:8px;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.top h2{font-size:18px}.csv{background:var(--y);color:var(--ink)}
+.empty{text-align:center;color:var(--mut);padding:30px}
+@media(max-width:800px){form,.row{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="wrap">
+<h1>Follow-up Register</h1><p class="sub">Kis customer ko aaj yaad dilana hai — ek nazar mein. Data sirf aapke phone/computer mein rehta hai.</p>
+<div class="stats"><div class="st late"><b id="sLate">0</b><span>Late ho chuke</span></div><div class="st today"><b id="sToday">0</b><span>Aaj ke follow-up</span></div><div class="st ok"><b id="sWeek">0</b><span>Agle 7 din mein</span></div><div class="st"><b id="sAll">0</b><span>Kul customer</span></div></div>
+<form id="f"><div><label>Customer ka naam</label><input id="name" required placeholder="jaise Sharma ji"></div><div><label>Mobile (10 ank)</label><input id="phone" required pattern="[0-9]{10}" placeholder="98XXXXXXXX"></div><div><label>Kaam</label><select id="svc"><option>RO service</option><option>Filter change</option><option>AMC renewal</option><option>Payment baaki</option></select></div><div><label>Pichhli tareekh</label><input id="last" type="date" required></div><div><label>Kitne din baad</label><input id="days" type="number" min="1" value="90" required></div><button class="add">+ Jodo</button></form>
+<div class="top"><h2>Follow-up list (sabse zaroori upar)</h2><button class="csv" id="csv">CSV download</button></div>
+<div id="list"></div>
+<p style="text-align:center;color:#5b6678;font-size:14px;margin:26px 0 8px">Free tool by <a href="https://www.youtube.com/@dhandhaai" style="color:#0B1220;font-weight:600">Dhandha AI</a> — YouTube pe dekhiye ye kaise bana.</p></div>
+<script>
+const KEY='followup-register-v1';let mem=[];const $=i=>document.getElementById(i);const fName=$('name'),fPhone=$('phone'),fSvc=$('svc'),fLast=$('last'),fDays=$('days');
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return mem}};
+const save=d=>{mem=d;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}};
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const due=c=>{const d=new Date(c.last+'T00:00:00');d.setDate(d.getDate()+Number(c.days));return d};
+const left=c=>Math.round((due(c)-today())/864e5);
+const fmt=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+function msg(c){const m={'RO service':'aapke RO ki service ka time ho gaya hai','Filter change':'aapke RO ka filter badalne ka time ho gaya hai','AMC renewal':'aapka AMC renew hone wala hai','Payment baaki':'aapka ek payment baaki hai'}[c.svc];
+return `Namaste ${c.name}, ${m} (due: ${fmt(due(c))}). Kab aana theek rahega? Bas is message ka reply kar dijiye.`}
+function render(){const d=load().sort((a,b)=>left(a)-left(b));const L=document.getElementById('list');
+document.getElementById('sLate').textContent=d.filter(c=>left(c)<0).length;document.getElementById('sToday').textContent=d.filter(c=>left(c)===0).length;
+document.getElementById('sWeek').textContent=d.filter(c=>left(c)>0&&left(c)<=7).length;document.getElementById('sAll').textContent=d.length;
+if(!d.length){L.innerHTML='<div class="empty">Abhi koi customer nahi. Upar se pehla customer jodo.</div>';return}
+L.innerHTML=d.map(c=>{const n=left(c);const chip=n<0?`<span class="chip c-late">${-n} din late</span>`:n===0?'<span class="chip c-today">Aaj</span>':`<span class="chip c-soon">${n} din baaki</span>`;
+return `<div class="row" data-id="${c.id}"><div><div class="nm">${esc(c.name)}</div><div class="ph">${esc(c.phone)}</div></div><div><div>${esc(c.svc)}</div><div class="sv">Due: ${fmt(due(c))}</div></div><div>${chip}${c.sent?`<div class="sent">Reminder bheja: ${esc(c.sent)}</div>`:''}</div><div class="acts"><button class="wa" data-a="wa">WhatsApp bhejo</button><button class="done" data-a="done">Kaam ho gaya</button><button class="del" data-a="del" title="Hatao">✕</button></div></div>`}).join('')}
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+document.getElementById('f').onsubmit=e=>{e.preventDefault();const d=load();d.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),name:fName.value.trim(),phone:fPhone.value.trim(),svc:fSvc.value,last:fLast.value,days:fDays.value,sent:''});save(d);e.target.reset();fDays.value=90;fLast.value=iso(today());render()};
+document.getElementById('list').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const id=e.target.closest('.row').dataset.id;const d=load();const c=d.find(x=>x.id===id);
+if(a==='wa'){window.lastWaUrl='https://wa.me/91'+c.phone+'?text='+encodeURIComponent(msg(c));window.open(window.lastWaUrl,'_blank');c.sent=fmt(today());save(d)}
+if(a==='done'){c.last=iso(today());c.sent='';save(d)}
+if(a==='del'){if(!confirm(c.name+' ko list se hatana hai?'))return;save(d.filter(x=>x.id!==id))}render()};
+document.getElementById('csv').onclick=()=>{const d=load();const rows=[['Naam','Mobile','Kaam','Pichhli tareekh','Din','Due','Din baaki']].concat(d.map(c=>[c.name,c.phone,c.svc,c.last,c.days,iso(due(c)),left(c)]));
+const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='followup-register.csv';a.click()};
+mem=load();fLast.value=iso(today());render();
+</script></body></html>
