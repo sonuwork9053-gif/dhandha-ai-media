@@ -1,7 +1,7 @@
 import sys, os, json, urllib.parse
 HERE=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(HERE,"..","..","kit"))
 from director import Stage
-T=float(sys.argv[1]); OUT=sys.argv[2]
+DUR=json.load(open(sys.argv[1])); T=sum(DUR); OUT=sys.argv[2]
 BEATS=json.load(open(os.path.join(HERE,"beats.json"),encoding="utf-8"))
 PROMPT=open(os.path.join(HERE,"prompt.txt"),encoding="utf-8").read()
 import datetime as dt
@@ -12,7 +12,7 @@ seed=[{"id":"s1","name":"Ramesh ji","phone":"9800000011","amt":"1200","type":"ou
  {"id":"s4","name":"Sunita ji","phone":"9800000012","amt":"640","type":"out","date":d(6),"sent":""},
  {"id":"s5","name":"Anil bhai","phone":"9800000013","amt":"300","type":"out","date":d(3),"sent":""}]
 INIT="try{if(!localStorage.getItem('udhaar-khata-v1'))localStorage.setItem('udhaar-khata-v1',"+json.dumps(json.dumps(seed))+")}catch(e){}"
-with Stage(os.path.join(HERE,"udhaar.html"),BEATS,T,OUT,INIT) as s:
+with Stage(os.path.join(HERE,"udhaar.html"),BEATS,T,OUT,INIT,durations=DUR) as s:
     pg,m,J=s.pg,s.marks,s.js
     print("beats",[round(x,1) for x in s.D])
     J("D.spot(D.row('Ramesh ji'),12); D.cap('<b>₹1,850 बाकी</b> — और आप भूल चुके हैं')"); s.until(m[1])

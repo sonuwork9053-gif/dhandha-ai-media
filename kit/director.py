@@ -47,9 +47,10 @@ DIRECTOR = r"""
 
 class Stage:
     """with Stage(page_html, beats, total_seconds, out_mp4, init_js) as s: ... s.until(s.at(i, .5))"""
-    def __init__(self, html_path, beats, total, out, init_js=""):
+    def __init__(self, html_path, beats, total, out, init_js="", durations=None):
         self.html, self.T, self.out, self.init = html_path, total, out, init_js
-        self.D = beat_durations(beats, total)
+        self.D = list(durations) if durations else beat_durations(beats, total)   # exact durations when the narration was made per beat
+        if durations: self.T = sum(self.D)
         self.marks = [0.0]
         for d in self.D: self.marks.append(self.marks[-1] + d)
     def __enter__(self):

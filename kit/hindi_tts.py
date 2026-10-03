@@ -19,7 +19,8 @@ CONS = {
 NUKTA = {'क':'k','ख':'x','ग':'ɡ','ज':'z','फ':'f','ड':'ɽ','ढ':'ɽʰ'}
 MATRA = {'ा':'aː','ि':'ɪ','ी':'iː','ु':'ʊ','ू':'uː','े':'eː','ै':'ɛː','ो':'oː','ौ':'ɔː','ृ':'ɾɪ','ॉ':'ɔː','ॅ':'ɛ'}
 VOWEL = {'अ':'ə','आ':'aː','इ':'ɪ','ई':'iː','उ':'ʊ','ऊ':'uː','ए':'eː','ऐ':'ɛː','ओ':'oː','औ':'ɔː','ऋ':'ɾɪ','ऑ':'ɔː','ऍ':'ɛ'}
-LATIN = {'AI':'एआई','WhatsApp':'व्हाट्सऐप','CSV':'सीएसवी','PDF':'पीडीएफ','Excel':'एक्सेल','YouTube':'यूट्यूब','Dhandha':'धंधा'}
+SPOKEN = {'व्हाट्सऐप':'वॉट्सैप','फ्री':'फ़्री','फोन':'फ़ोन'}
+LATIN = {'AI':'एआई','WhatsApp':'वॉट्सैप','CSV':'सीएसवी','PDF':'पीडीएफ','Excel':'एक्सेल','YouTube':'यूट्यूब','Dhandha':'धंधा'}
 UNSTRESSED = set('का के की है हैं में से को पर और ने भी ही तो कि ये वो था थी थे एक या जो'.split())
 VOW_RE = r'(?:aː|iː|uː|eː|ɛː|oː|ɔː|ə|ɪ|ʊ|ɛ)'
 
@@ -80,6 +81,7 @@ def word_ipa(word):
 
 def phonemize(sentence):
     for k, v in LATIN.items(): sentence = re.sub(r'\b' + k + r'\b', v, sentence)
+    for k, v in SPOKEN.items(): sentence = sentence.replace(k, v)
     out = []
     for tok in re.findall(r'[ऀ-ॿ]+|[,?!]|।', sentence):
         if tok == '।': out.append('.')
