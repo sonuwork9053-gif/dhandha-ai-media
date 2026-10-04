@@ -1,0 +1,13 @@
+Meri dukaan ke liye ek single-file HTML tool banao, naam "Order Register".
+
+• Form: customer ka naam, 10 ank ka mobile, kya banana hai (dropdown),
+  dene ki tareekh, kul rakam, advance.
+• List: dene ki tareekh ke hisaab se sorted, sabse pehle wala upar.
+  Chip: "X din late" (laal), "Aaj dena hai" (narangi), "X din baaki" (hara).
+• Har order ke 3 haal: Naya → Silai mein → Taiyar. Ek button se aage badhe.
+• Taiyar hone par "WhatsApp: taiyar hai" button: wa.me link, naam,
+  kaam aur baaki rakam ke saath pehle se likha message.
+• "De diya" dabane par order list se hat jaye.
+• Upar 4 ginti: late, aaj dene hain, taiyar pade hain, lena baaki.
+• Data sirf browser ke localStorage mein rahe. CSV download do.
+• Koi server, login ya paid service nahi. Mobile pe bhi chale.

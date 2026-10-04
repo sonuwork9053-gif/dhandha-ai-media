@@ -47,7 +47,8 @@ DIRECTOR = r"""
 
 class Stage:
     """with Stage(page_html, beats, total_seconds, out_mp4, init_js) as s: ... s.until(s.at(i, .5))"""
-    def __init__(self, html_path, beats, total, out, init_js="", durations=None):
+    def __init__(self, html_path, beats, total, out, init_js="", durations=None, zoom=1.14, maxw=1480):
+        self.zoom, self.maxw = zoom, maxw   # bigger zoom + smaller maxw = larger, more readable tool on screen
         self.html, self.T, self.out, self.init = html_path, total, out, init_js
         self.D = list(durations) if durations else beat_durations(beats, total)   # exact durations when the narration was made per beat
         if durations: self.T = sum(self.D)
@@ -60,7 +61,7 @@ class Stage:
                                       record_video_size={"width": 1920, "height": 1080}, accept_downloads=True)
         self.ctx.add_init_script("window.open=(u)=>{window.__opened=u;return null};" + self.init)
         self.pg = self.ctx.new_page(); tp = time.monotonic()
-        self.pg.goto("file://" + os.path.abspath(self.html)); self.pg.evaluate(DIRECTOR); self.pg.wait_for_timeout(700)
+        self.pg.goto("file://" + os.path.abspath(self.html)); self.pg.evaluate(DIRECTOR.replace(".wrap{zoom:1.14;max-width:1480px !important}", ".wrap{zoom:%s;max-width:%spx !important}" % (self.zoom, self.maxw))); self.pg.wait_for_timeout(700)
         self.t0 = time.monotonic(); self.head = self.t0 - tp
         return self
     def at(self, i, frac): return self.marks[i] + self.D[i] * frac

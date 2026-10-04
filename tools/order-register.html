@@ -1,0 +1,55 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Order Register</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0B1220;--mut:#5b6678;--line:#dfe4ee;--y:#FFC400;--g:#12925a;--r:#d23b40;--o:#c9780a;--b:#2563eb}
+*{box-sizing:border-box;margin:0}body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px}
+.wrap{max-width:1080px;margin:0 auto}h1{font-size:30px}.sub{color:var(--mut);margin:4px 0 20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}.st b{font-size:28px;display:block}.st span{color:var(--mut);font-size:14px}
+.st.late b{color:var(--r)}.st.today b{color:var(--o)}.st.rdy b{color:var(--g)}
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr .8fr .8fr auto;gap:10px;align-items:end;margin-bottom:20px}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.add{background:var(--ink);color:#fff}.wa{background:#1fa855;color:#fff}.nx{background:#e9edf5;color:var(--ink)}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1.2fr 1fr .9fr .9fr auto;gap:12px;align-items:center;margin-bottom:10px}
+.nm{font-weight:700;font-size:18px}.ph,.sv{color:var(--mut);font-size:14px}
+.chip{display:inline-block;font-weight:700;font-size:14px;padding:5px 12px;border-radius:999px}
+.c-late{background:#fde8e9;color:var(--r)}.c-today{background:#fff1d6;color:var(--o)}.c-soon{background:#e3f5ec;color:var(--g)}
+.s-0{background:#eef1f6;color:var(--mut)}.s-1{background:#e4ecfd;color:var(--b)}.s-2{background:#e3f5ec;color:var(--g)}
+.sent{font-size:12px;color:var(--g);margin-top:4px}.acts{display:flex;gap:8px;align-items:center}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.top h2{font-size:18px}.csv{background:var(--y);color:var(--ink)}
+.empty{text-align:center;color:var(--mut);padding:30px}.foot{text-align:center;color:#5b6678;font-size:14px;margin:26px 0 8px}.foot a{color:#0B1220;font-weight:600}
+@media(max-width:800px){form,.row{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="wrap">
+<h1>Order Register</h1><p class="sub">Kaunsa order kab dena hai aur kis haal mein hai — ek nazar mein. Data sirf aapke phone/computer mein rehta hai.</p>
+<div class="stats"><div class="st late"><b id="sLate">0</b><span>Late ho chuke</span></div><div class="st today"><b id="sToday">0</b><span>Aaj dene hain</span></div><div class="st rdy"><b id="sRdy">0</b><span>Taiyar pade hain</span></div><div class="st"><b id="sBal">₹0</b><span>Lena baaki</span></div></div>
+<form id="f"><div><label>Customer ka naam</label><input id="name" required placeholder="jaise Meena ji"></div><div><label>Mobile (10 ank)</label><input id="phone" required pattern="[0-9]{10}" placeholder="98XXXXXXXX"></div><div><label>Kya banana hai</label><select id="item"><option>Blouse</option><option>Suit</option><option>Kurta</option><option>Pant</option><option>Alteration</option></select></div><div><label>Dene ki tareekh</label><input id="due" type="date" required></div><div><label>Kul (₹)</label><input id="total" type="number" min="0" required placeholder="600"></div><div><label>Advance (₹)</label><input id="adv" type="number" min="0" value="0" required></div><button class="add">+ Jodo</button></form>
+<div class="top"><h2>Order list (jo pehle dena hai wo upar)</h2><button class="csv" id="csv">CSV download</button></div>
+<div id="list"></div>
+<p class="foot">Free tool by <a href="https://www.youtube.com/@dhandhaai">Dhandha AI</a> — YouTube pe dekhiye ye kaise bana.</p></div>
+<script>
+const KEY='order-register-v1';let mem=[];const $=i=>document.getElementById(i);
+const F={name:$('name'),phone:$('phone'),item:$('item'),due:$('due'),total:$('total'),adv:$('adv')};
+const ST=['Naya','Silai mein','Taiyar'];
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return mem}};
+const save=d=>{mem=d;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}};
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const left=o=>Math.round((new Date(o.due)-new Date(today()))/864e5);
+const rs=n=>'₹'+Number(n).toLocaleString('en-IN');const bal=o=>Math.max(Number(o.total)-Number(o.adv),0);
+const fmt=s=>new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function msg(o){return `Namaste ${o.name}, aapka ${o.item} taiyar hai. `+(bal(o)>0?`${rs(bal(o))} baaki hai. `:'')+`Dukaan ke samay mein aakar le jaiye. Dhanyavaad.`}
+function render(){const d=load().filter(o=>o.st<3).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0);
+$('sLate').textContent=d.filter(o=>left(o)<0).length;$('sToday').textContent=d.filter(o=>left(o)===0).length;$('sRdy').textContent=d.filter(o=>o.st===2).length;$('sBal').textContent=rs(d.reduce((s,o)=>s+bal(o),0));
+const L=$('list');if(!d.length){L.innerHTML='<div class="empty">Abhi koi order nahi. Upar se pehla order jodo.</div>';return}
+L.innerHTML=d.map(o=>{const n=left(o);const chip=n<0?`<span class="chip c-late">${-n} din late</span>`:n===0?'<span class="chip c-today">Aaj dena hai</span>':`<span class="chip c-soon">${n} din baaki</span>`;
+const nxt=o.st===0?'Silai shuru':o.st===1?'Taiyar ho gaya':'De diya';
+return `<div class="row" data-id="${o.id}"><div><div class="nm">${esc(o.name)}</div><div class="ph">${esc(o.phone)}</div></div><div><div>${esc(o.item)}</div><div class="sv">Dena: ${fmt(o.due)} · Baaki ${rs(bal(o))}</div></div><div>${chip}</div><div><span class="chip s-${o.st}">${ST[o.st]}</span>${o.sent?`<div class="sent">Bataya: ${esc(o.sent)}</div>`:''}</div><div class="acts">${o.st===2?'<button class="wa" data-a="wa">WhatsApp: taiyar hai</button>':''}<button class="nx" data-a="nx">${nxt}</button></div></div>`}).join('')}
+$('f').onsubmit=e=>{e.preventDefault();const d=load();d.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),name:F.name.value.trim(),phone:F.phone.value.trim(),item:F.item.value,due:F.due.value,total:F.total.value,adv:F.adv.value,st:0,sent:''});save(d);e.target.reset();F.adv.value=0;F.due.value=today();render()};
+$('list').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const id=e.target.closest('.row').dataset.id;const d=load();const o=d.find(x=>x.id===id);
+if(a==='wa'){window.lastWaUrl='https://wa.me/91'+o.phone+'?text='+encodeURIComponent(msg(o));window.open(window.lastWaUrl,'_blank');o.sent=fmt(today())}
+if(a==='nx'){o.st+=1}save(d);render()};
+$('csv').onclick=()=>{const d=load();const rows=[['Naam','Mobile','Kaam','Dene ki tareekh','Kul','Advance','Baaki','Haal']].concat(d.map(o=>[o.name,o.phone,o.item,o.due,o.total,o.adv,bal(o),o.st<3?ST[o.st]:'De diya']));
+const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='order-register.csv';a.click()};
+mem=load();F.due.value=today();render();
+</script></body></html>

@@ -1,0 +1,27 @@
+from playwright.sync_api import sync_playwright
+import os, urllib.parse, datetime as dt
+R=[]; ok=lambda n,c: R.append((n,bool(c))); t=dt.date.today(); d=lambda n:(t+dt.timedelta(days=n)).isoformat()
+with sync_playwright() as p:
+    b=p.chromium.launch(); pg=b.new_page(viewport={"width":1280,"height":820}); pg.add_init_script("window.open=(u)=>{window.__o=u}")
+    pg.goto("file://"+os.path.abspath(os.path.join(os.path.dirname(__file__),"orders.html")))
+    ok("empty state","Abhi koi order nahi" in pg.inner_text("#list"))
+    def add(n,ph,it,due,tot,adv):
+        pg.fill("#name",n); pg.fill("#phone",ph); pg.select_option("#item",it); pg.fill("#due",due); pg.fill("#total",str(tot)); pg.fill("#adv",str(adv)); pg.click("button.add")
+    add("Meena ji","9800000021","Blouse",d(-2),600,200); add("Kavita ji","9800000022","Suit",d(0),1200,500); add("Pooja ji","9800000023","Kurta",d(4),450,450)
+    ok("3 rows sorted by date", pg.locator(".nm").all_inner_texts()==["Meena ji","Kavita ji","Pooja ji"])
+    ok("chips", [c for c in pg.locator(".row .chip").all_inner_texts() if "din" in c or "Aaj" in c]==["2 din late","Aaj dena hai","4 din baaki"])
+    ok("counters", [pg.inner_text(x) for x in ("#sLate","#sToday","#sRdy","#sBal")]==["1","1","0","₹1,100"])
+    r=pg.locator(".row").nth(0); ok("no whatsapp before ready", r.locator("[data-a=wa]").count()==0)
+    r.locator("[data-a=nx]").click(); ok("status Silai mein","Silai mein" in pg.locator(".row").nth(0).inner_text())
+    pg.locator(".row").nth(0).locator("[data-a=nx]").click(); ok("status Taiyar + ready count", "Taiyar" in pg.locator(".row").nth(0).inner_text() and pg.inner_text("#sRdy")=="1")
+    pg.locator(".row").nth(0).locator("[data-a=wa]").click(); u=urllib.parse.unquote(pg.evaluate("window.__o"))
+    ok("whatsapp name+item+balance", u.startswith("https://wa.me/919800000021?text=") and "Meena ji" in u and "Blouse taiyar" in u and "₹400 baaki" in u)
+    ok("told mark","Bataya" in pg.locator(".row").nth(0).inner_text())
+    pg.locator(".row").nth(0).locator("[data-a=nx]").click(); ok("delivered leaves list + counters", pg.locator(".row").count()==2 and [pg.inner_text(x) for x in ("#sLate","#sBal")]==["0","₹700"])
+    pg.reload(); ok("survives reload", pg.locator(".row").count()==2)
+    with pg.expect_download() as dl: pg.click("#csv")
+    ok("csv 1+3 rows", len(open(dl.value.path(),encoding="utf-8-sig").read().strip().splitlines())==4)
+    pg.fill("#name","X"); pg.fill("#phone","12"); pg.fill("#total","5"); pg.click("button.add"); ok("bad phone rejected", pg.locator(".row").count()==2)
+    b.close()
+for n,c in R: print("PASS" if c else "FAIL",n)
+print(sum(c for _,c in R),"/",len(R))
