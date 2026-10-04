@@ -79,7 +79,37 @@ def word_ipa(word):
     pos = vs[-2].start() if len(vs) >= 2 else vs[0].start()
     return ipa[:pos] + 'ˈ' + ipa[pos:]
 
+_N = ("शून्य एक दो तीन चार पाँच छह सात आठ नौ दस ग्यारह बारह तेरह चौदह पंद्रह सोलह सत्रह अठारह उन्नीस बीस "
+      "इक्कीस बाईस तेईस चौबीस पच्चीस छब्बीस सत्ताईस अट्ठाईस उनतीस तीस इकतीस बत्तीस तैंतीस चौंतीस पैंतीस छत्तीस सैंतीस अड़तीस उनतालीस चालीस "
+      "इकतालीस बयालीस तैंतालीस चौवालीस पैंतालीस छियालीस सैंतालीस अड़तालीस उनचास पचास इक्यावन बावन तिरपन चौवन पचपन छप्पन सत्तावन अट्ठावन उनसठ साठ "
+      "इकसठ बासठ तिरसठ चौंसठ पैंसठ छियासठ सड़सठ अड़सठ उनहत्तर सत्तर इकहत्तर बहत्तर तिहत्तर चौहत्तर पचहत्तर छिहत्तर सतहत्तर अठहत्तर उनासी अस्सी "
+      "इक्यासी बयासी तिरासी चौरासी पचासी छियासी सत्तासी अट्ठासी नवासी नब्बे इक्यानवे बानवे तिरानवे चौरानवे पचानवे छियानवे सत्तानवे अट्ठानवे निन्यानवे").split()
+
+def hindi_number(n):
+    """0..99,99,99,999 -> Hindi words (Indian grouping: हज़ार, लाख, करोड़)."""
+    n = int(n)
+    if n < 100: return _N[n]
+    out = []
+    for div, name in ((10000000, 'करोड़'), (100000, 'लाख'), (1000, 'हज़ार'), (100, 'सौ')):
+        q, n = divmod(n, div)
+        if q: out.append((hindi_number(q) if q >= 100 else _N[q]) + ' ' + name)
+    if n: out.append(_N[n])
+    return ' '.join(out)
+
+_DEV_DIG = str.maketrans('०१२३४५६७८९', '0123456789')
+
+def normalize(sentence):
+    """Digits, rupee sign and percent -> spoken Hindi words (digits were silently skipped before)."""
+    s = sentence.translate(_DEV_DIG)
+    s = re.sub(r'(?<=\d),(?=\d)', '', s)
+    s = re.sub(r'₹\s*(\d+)', lambda m: hindi_number(m.group(1)) + ' रुपये', s)
+    s = re.sub(r'(\d+)\s*%', lambda m: hindi_number(m.group(1)) + ' प्रतिशत', s)
+    s = re.sub(r'\d{8,}', lambda m: ' '.join(_N[int(c)] for c in m.group(0)), s)      # phone-like: digit by digit
+    s = re.sub(r'(\d+)\.(\d+)', lambda m: hindi_number(m.group(1)) + ' दशमलव ' + ' '.join(_N[int(c)] for c in m.group(2)), s)
+    return re.sub(r'\d+', lambda m: hindi_number(m.group(0)), s)
+
 def phonemize(sentence):
+    sentence = normalize(sentence)
     for k, v in LATIN.items(): sentence = re.sub(r'\b' + k + r'\b', v, sentence)
     for k, v in SPOKEN.items(): sentence = sentence.replace(k, v)
     out = []

@@ -7,23 +7,28 @@ Owner's standing instruction (3 Oct 2026): publish directly as public, no approv
 ## Rules
 - Build a real working tool first and test it. The video shows that tool, nothing mocked.
 - Never invent a number, a result or a source. On-screen data is sample data and is labelled "Sample data".
-- Hindi narration (Devanagari text for TTS). Description says the narration is an AI voice.
+- Hindi narration (Devanagari text for TTS), delivered in the owner's own voice (see step 3b). Description says the narration is AI-generated in the channel owner's voice.
 - Title and thumbnail carry different words. Thumbnail: navy `#0B1220`, yellow `#FFC400`, max 4 words big.
 - Look at a contact sheet of frames before uploading. Fix overlaps and cut-off text first.
-- Audio cannot be listened to from the workspace. Say so in the run report. The owner chose the Kokoro voice 'hm_omega' on 4 Oct 2026 (Pratham and Rohan are approved fallbacks).
+- Audio cannot be listened to from the workspace. Say so in the run report. On 4 Oct 2026 the owner said the Omega voice sounds odd and gave a 29-second recording of his own voice to be used for every video from now on. Never ask him for audio again unless he offers a longer recording.
 
 ## Pipeline (current, tested end to end on video 02 — free voice, no ElevenLabs)
 ElevenLabs is NOT used any more: the owner's free ElevenLabs account was disabled on 3 Oct 2026. Do not call ElevenLabs tools.
 
-0. Voice model (data files, not kept in this repo). The owner chose the Kokoro voice **hm_omega** on 4 Oct 2026:
-   `curl -sSL -o /tmp/kokoro.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2 && tar xjf /tmp/kokoro.tar.bz2 -C /tmp` (350 MB)
-   Use `KokoroVoice("/tmp/kokoro-multi-lang-v1_0", "hm_omega", speed=1.2)` from `kit/hindi_tts.py` (24 kHz, own phonemizer, pre-installed `onnxruntime`). Speed 1.2 brings its pace close to the earlier narration; keep sec-per-beat sensible.
-   Fallback if Kokoro cannot be downloaded or fails: Piper voice Pratham — `curl -sSL -o /tmp/pratham.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2 && tar xjf /tmp/pratham.tar.bz2 -C /tmp`, then `Voice("/tmp/vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx")`.
-   Do NOT run the Piper binary or any other downloaded program — that is blocked. If `onnxruntime` is missing or no model can be downloaded, stop and report.
+0. Voice models (data files, not kept in this repo; download once per session, GitHub only):
+   - Source voice (gives the words and timing): Piper Pratham — `curl -sSL -o /tmp/pratham.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2 && tar xjf /tmp/pratham.tar.bz2 -C /tmp`, then `Voice("/tmp/vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx", length_scale=1.12)` from `kit/hindi_tts.py`.
+     (Alternative source: Kokoro `kokoro-multi-lang-v1_0.tar.bz2` from the same release, `KokoroVoice("/tmp/kokoro-multi-lang-v1_0", "hm_omega", speed=1.1)`. The owner was sent both as samples A = Omega source, B = Pratham source on 4 Oct 2026; if TOPICS.md or a later note records his choice, use that.)
+   - Owner's-voice conversion (kNN-VC, pure numpy in `kit/own_voice.py`, no torch, no downloaded program):
+     `mkdir -p /tmp/knnvc && curl -sSL -o /tmp/knnvc/WavLM-Large.pt https://github.com/bshall/knn-vc/releases/download/v0.1/WavLM-Large.pt && curl -sSL -o /tmp/knnvc/prematch_g.pt https://github.com/bshall/knn-vc/releases/download/v0.1/prematch_g_02500000.pt` (1.26 GB + 66 MB).
+     The owner's reference file `kit/voice/owner-ref.wavlm6.npy` (features of his recording) is NOT in this public repo yet: publishing it needs the owner's explicit yes, because anyone could download it. If the file is absent, skip step 3b, narrate with the source voice, and say so in the run report. Never commit his raw recording or this file without that yes.
+   Do NOT run the Piper binary or any other downloaded program — that is blocked. If `onnxruntime` is missing or no model can be downloaded, stop and report. If only the kNN-VC files fail, publish with the source voice and say so in the report.
 1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright (see `video-02/src/test.py`).
 2. Write the script: 5 hooks scored with `hookscore.py` (repo Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats. Save the beats as `video-NN/src/beats.json` (Devanagari; spell numbers in words; English words are handled by `LATIN`/`SPOKEN` in `kit/hindi_tts.py` — add new ones there).
-3. Narration: `voice.narrate(beats, "narr.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation.
-4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur, zoom=1.36, maxw=1350)` — see `video-03/src/record.py` (the current reference). Pick zoom/maxw so the tool fills the screen, text is readable on a phone, and every row fits above the caption. Exact durations mean captions and voice stay in sync.
+3. Narration: `voice.narrate(beats, "narr-src.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation. Digits, ₹ and % are read out as Hindi words automatically (`normalize()`).
+3b. Owner's voice: `OwnVoice("/tmp/knnvc", "kit/voice/owner-ref.wavlm6.npy").convert_file("narr-src.wav", "narr.wav")` — same length to the sample, so `dur.json` stays valid (about 2x real time on 2 CPUs; output 16 kHz). Check the output is not silent and has the same duration.
+4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur, zoom=1.36, maxw=1350)` — see `video-03/src/record.py` (the current reference). Pick zoom/maxw so the tool fills the screen, text is readable on a phone, and every row fits above the caption.
+   The Stage renders frame by frame on a virtual clock (about 2.3x real time; a 3-minute video takes about 7 minutes): exact 30 fps and exact sync. In a record script wait ONLY with `s.until(t)` / `s.hold(sec)` and change the page through `s.js`, `s.click`, `s.type`, `s.move` — never `pg.wait_for_timeout` or `time.sleep` (page time does not move during those). The old real-time recorder dropped to 5–13 fps and let the picture fall up to 3.5 s behind the voice (video 03 as published has that fault).
+   Animation (owner wants animated, quality videos): use at least four of these per video — `D.title(kicker, head)` animated hook card, `D.steps(title, [..])` list that builds up, `D.stat(number, label, '₹')` count-up, `D.versus(badTitle, [..], goodTitle, [..])` before/after cards, `D.focus(sel, 1.4)` camera zoom + spotlight (`D.unzoom()` after), `D.wipe(fn)` scene transition, `D.chapter('2 · नया ऑर्डर')` chip, `D.progress(total)` top bar at the start, `D.capPop(html)` caption with a pop. Test clip: see the docstring examples in `kit/director.py`.
 5. Master the voice, then join: `ffmpeg -i narr.wav -af "highpass=f=70,acompressor=threshold=-20dB:ratio=3:attack=5:release=80:makeup=2,loudnorm=I=-14:TP=-1.5:LRA=9" -ar 48000 narr-m.wav` and `ffmpeg -i silent.mp4 -i narr-m.wav -c:v copy -c:a aac -b:a 160k -shortest -movflags +faststart video-NN/video-hi.mp4`.
 6. Look at a contact sheet of frames (one per beat). Fix overlaps or cut-off text and re-record.
 7. Thumbnail `video-NN/thumb.jpg` (see `video-02/src/thumb.html`).
@@ -36,7 +41,7 @@ The workspace cannot reach YouTube directly; GitHub raw URLs are how files reach
 
 ## Shorts
 - One Short per long video: vertical 1080x1920, under 40 seconds, 4 beats: hook, what the tool shows, the one key action, end card pointing to the full video on the channel.
-- Separate short Hindi narration made with `kit/hindi_tts.py` (exact durations). Record vertically with `video-01/src/short.py` as the layout reference (top caption band, spotlight, panel) but drive the beat timing from the exact durations, join audio with ffmpeg, push `video-NN/short-hi.mp4`, upload from the raw GitHub URL.
+- Separate short Hindi narration (steps 3 and 3b, `beat_gap=0.45`, exact durations). Record with `video-03/src/short.py` as the reference: `Stage(..., size=(540, 960), scale=2, director=SHORT_DIRECTOR, tail=0.8)` lays the tool out as a phone (its own mobile layout) and renders 1080x1920. Look at a contact sheet, join audio with ffmpeg (step 5), push `video-NN/short-hi.mp4`, upload from the raw GitHub URL. Do not use `video-01/src/short.py` or `video-01/src/record.py` any more (old real-time recorder, drifts).
 - Title ends with `#Shorts`. Description: one line plus the full video link.
 
 ## Topics and variety (owner's instruction, 3 Oct 2026)
@@ -57,4 +62,4 @@ The workspace cannot reach YouTube directly; GitHub raw URLs are how files reach
 - Cut 2–3 Shorts from every long video (hook, the one key action, the before/after), each with its own short narration.
 - Avoid a template feel (YouTube rejects repetitive, mass-produced channels): rotate the story format between videos (a "maan lijiye" story, a mistake to avoid, a before/after, a viewer's request, a comparison), vary the thumbnail layout and the caption wording, use a different business each time, and include at least one scene per video that is not the tool (a story panel, a comparison, a list of who else can use it).
 - Do not have the narrator give tax, legal, medical or investment advice.
-- The owner deleted the first udhaar-khata video (Pratham voice, small text). Quality bar: Omega voice, large readable tool, a real story.
+- The owner deleted the first udhaar-khata video (small text, weak story). Quality bar: his own voice, large readable tool, a real story, animated scenes, picture exactly in step with the voice.
