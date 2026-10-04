@@ -23,8 +23,8 @@ ElevenLabs is NOT used any more: the owner's free ElevenLabs account was disable
 1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright (see `video-02/src/test.py`).
 2. Write the script: 5 hooks scored with `hookscore.py` (repo Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats. Save the beats as `video-NN/src/beats.json` (Devanagari; spell numbers in words; English words are handled by `LATIN`/`SPOKEN` in `kit/hindi_tts.py` — add new ones there).
 3. Narration: `voice.narrate(beats, "narr.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation.
-4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur)` — see `video-02/src/record.py`. Exact durations mean captions and voice stay in sync.
-5. Join: `ffmpeg -i silent.mp4 -i narr.wav -c:v copy -c:a aac -b:a 128k -shortest -movflags +faststart video-NN/video-hi.mp4`.
+4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur, zoom=1.36, maxw=1350)` — see `video-03/src/record.py` (the current reference). Pick zoom/maxw so the tool fills the screen, text is readable on a phone, and every row fits above the caption. Exact durations mean captions and voice stay in sync.
+5. Master the voice, then join: `ffmpeg -i narr.wav -af "highpass=f=70,acompressor=threshold=-20dB:ratio=3:attack=5:release=80:makeup=2,loudnorm=I=-14:TP=-1.5:LRA=9" -ar 48000 narr-m.wav` and `ffmpeg -i silent.mp4 -i narr-m.wav -c:v copy -c:a aac -b:a 160k -shortest -movflags +faststart video-NN/video-hi.mp4`.
 6. Look at a contact sheet of frames (one per beat). Fix overlaps or cut-off text and re-record.
 7. Thumbnail `video-NN/thumb.jpg` (see `video-02/src/thumb.html`).
 8. Publish the tool page (`tools/<slug>.html`, add to `index.html`), commit everything except wav/silent files, push to `main`.
@@ -50,3 +50,11 @@ The workspace cannot reach YouTube directly; GitHub raw URLs are how files reach
 - Live URL pattern: `https://sonuwork9053-gif.github.io/dhandha-ai-media/tools/<slug>.html`. Pages takes a few minutes to deploy; fetch the URL and confirm it loads before putting it in a description. Never publish a dead link.
 - First line of every description (Hindi and the English localization): the free tool link.
 - Add each long video to playlist `PLVDr12VSeYo4`, add an English title/description localization, and post one channel comment that asks viewers a question.
+
+## Length, format and Shorts (owner's instruction, 4 Oct 2026)
+- Goal: qualify for the YouTube Partner Program under the current thresholds (1,000 subscribers + 4,000 watch hours, or 10M Shorts views in 90 days) before the entry bar is reported to rise on 1 Feb 2027. Watch hours need longer videos.
+- Grow length step by step: videos 03–06 about 3 minutes (14 beats), then 4–5 minutes, and from the second week one 8–10 minute "poora setup" episode per week that combines related tools for one kind of shop (for example kirana: udhaar khata + galla register + stock list). Never pad: every added minute must show something new on screen.
+- Cut 2–3 Shorts from every long video (hook, the one key action, the before/after), each with its own short narration.
+- Avoid a template feel (YouTube rejects repetitive, mass-produced channels): rotate the story format between videos (a "maan lijiye" story, a mistake to avoid, a before/after, a viewer's request, a comparison), vary the thumbnail layout and the caption wording, use a different business each time, and include at least one scene per video that is not the tool (a story panel, a comparison, a list of who else can use it).
+- Do not have the narrator give tax, legal, medical or investment advice.
+- The owner deleted the first udhaar-khata video (Pratham voice, small text). Quality bar: Omega voice, large readable tool, a real story.
