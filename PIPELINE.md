@@ -10,17 +10,19 @@ Owner's standing instruction (3 Oct 2026): publish directly as public, no approv
 - Hindi narration (Devanagari text for TTS). Description says the narration is an AI voice.
 - Title and thumbnail carry different words. Thumbnail: navy `#0B1220`, yellow `#FFC400`, max 4 words big.
 - Look at a contact sheet of frames before uploading. Fix overlaps and cut-off text first.
-- Audio cannot be listened to from the workspace. Say so in the run report. The owner approved the free voices 'Pratham' and 'Rohan' on 3 Oct 2026; Pratham is the default (its pace matches the earlier narration).
+- Audio cannot be listened to from the workspace. Say so in the run report. The owner chose the Kokoro voice 'hm_omega' on 4 Oct 2026 (Pratham and Rohan are approved fallbacks).
 
 ## Pipeline (current, tested end to end on video 02 — free voice, no ElevenLabs)
 ElevenLabs is NOT used any more: the owner's free ElevenLabs account was disabled on 3 Oct 2026. Do not call ElevenLabs tools.
 
-0. Voice model (data file, about 67 MB, not kept in this repo):
-   `curl -sSL -o /tmp/pratham.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2 && tar xjf /tmp/pratham.tar.bz2 -C /tmp`
-   Model path: `/tmp/vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx`. It runs with the pre-installed `onnxruntime` through `kit/hindi_tts.py` (own phonemizer). Do NOT run the Piper binary or any other downloaded program — that is blocked. If `onnxruntime` is missing or the model cannot be downloaded, stop and report.
+0. Voice model (data files, not kept in this repo). The owner chose the Kokoro voice **hm_omega** on 4 Oct 2026:
+   `curl -sSL -o /tmp/kokoro.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2 && tar xjf /tmp/kokoro.tar.bz2 -C /tmp` (350 MB)
+   Use `KokoroVoice("/tmp/kokoro-multi-lang-v1_0", "hm_omega", speed=1.2)` from `kit/hindi_tts.py` (24 kHz, own phonemizer, pre-installed `onnxruntime`). Speed 1.2 brings its pace close to the earlier narration; keep sec-per-beat sensible.
+   Fallback if Kokoro cannot be downloaded or fails: Piper voice Pratham — `curl -sSL -o /tmp/pratham.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-hi_IN-pratham-medium.tar.bz2 && tar xjf /tmp/pratham.tar.bz2 -C /tmp`, then `Voice("/tmp/vits-piper-hi_IN-pratham-medium/hi_IN-pratham-medium.onnx")`.
+   Do NOT run the Piper binary or any other downloaded program — that is blocked. If `onnxruntime` is missing or no model can be downloaded, stop and report.
 1. Build the tool as a single HTML file in `video-NN/src/`, test with Playwright (see `video-02/src/test.py`).
 2. Write the script: 5 hooks scored with `hookscore.py` (repo Jakeschincariol/youtube-agent-skill, `skills/yt-script`), keep the best, then about 10 beats. Save the beats as `video-NN/src/beats.json` (Devanagari; spell numbers in words; English words are handled by `LATIN`/`SPOKEN` in `kit/hindi_tts.py` — add new ones there).
-3. Narration: `Voice(model).narrate(beats, "narr.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation.
+3. Narration: `voice.narrate(beats, "narr.wav")` returns the EXACT seconds of every beat. Save them as `dur.json`. Check `V.missing` is empty and print `phonemize()` of a few lines to sanity-check pronunciation.
 4. Record with `kit/director.py` `Stage(html, beats, total, out, init_js, durations=dur)` — see `video-02/src/record.py`. Exact durations mean captions and voice stay in sync.
 5. Join: `ffmpeg -i silent.mp4 -i narr.wav -c:v copy -c:a aac -b:a 128k -shortest -movflags +faststart video-NN/video-hi.mp4`.
 6. Look at a contact sheet of frames (one per beat). Fix overlaps or cut-off text and re-record.
