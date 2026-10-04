@@ -14,3 +14,6 @@ Take the first unchecked topic. After publishing, tick it and add the video link
 - [ ] 10 Amazon / Flipkart seller: product listing writer from a few facts
 - [ ] 11 Any shop: WhatsApp quick-reply bank for the ten most asked questions
 - [ ] 12 Any shop: daily galla register — sale, kharcha, bachat
+
+## Pending fix (do after the day's video, only if the upload is not throttled)
+- Video 03 `BHRajvVMvDw` has the picture up to 3.5 s behind the voice. Corrected file: `video-03/video-hi-v2.mp4`. Upload it with the same title/description/tags/thumbnail (`notify_subscribers: false`), add to the playlist, add the English localization, then delete `BHRajvVMvDw` and remove this note. First try on 4 Oct was throttled by Zapier.
