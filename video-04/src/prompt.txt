@@ -1,0 +1,16 @@
+Meri coaching ke liye ek single-file HTML tool banao, naam "Fees Register".
+
+• Form: student ka naam, parent ka 10 ank ka mobile, batch,
+  mahine ki fees, aur kis mahine se aa raha hai.
+• Us mahine se aaj tak, jis mahine ki fees jama nahi hui,
+  wo apne aap "baaki" mein dikhe. Naya mahina = nayi fees baaki.
+• List: sabse zyada baaki upar. Har row pe baaki mahine aur
+  rakam (laal), ya "jama" (hara).
+• Upar 4 ginti: kul fees baaki, kitne students par baaki,
+  is mahine kitni jama hui, kul students.
+• "Fees aayi" button: sabse purana baaki mahina jama kare.
+  Galti ho to wapas lene ka button.
+• "WhatsApp yaad dilao" button: wa.me link, student ka naam,
+  mahine aur rakam ke saath pehle se likha vinamra message.
+• Data sirf browser ke localStorage mein rahe. CSV download do.
+• Koi server, login ya paid service nahi. Mobile pe bhi chale.

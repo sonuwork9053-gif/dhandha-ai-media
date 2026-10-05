@@ -1,0 +1,62 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fees Register</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#0B1220;--mut:#5b6678;--line:#dfe4ee;--y:#FFC400;--g:#12925a;--r:#d23b40}
+*{box-sizing:border-box;margin:0}body{font-family:Poppins,system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px}
+.wrap{max-width:1080px;margin:0 auto}h1{font-size:30px}.sub{color:var(--mut);margin:4px 0 20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}.st b{font-size:28px;display:block}.st span{color:var(--mut);font-size:14px}
+.st.tot b{color:var(--r)}.st.in b{color:var(--g)}
+form{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;grid-template-columns:1.3fr 1.1fr .9fr .9fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px}
+label{font-size:13px;color:var(--mut);display:block;margin-bottom:4px}input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+button{font:inherit;font-weight:600;white-space:nowrap;border:0;border-radius:10px;padding:10px 16px;cursor:pointer}
+.add{background:var(--ink);color:#fff}.wa{background:#1fa855;color:#fff}.pay{background:#e9edf5;color:var(--ink)}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr .7fr 1.3fr 3fr;gap:12px;align-items:center;margin-bottom:10px}
+.nm{font-weight:700;font-size:18px}.ph,.sv{color:var(--mut);font-size:14px}
+.chip{display:inline-block;font-weight:700;font-size:15px;padding:5px 12px;border-radius:999px}
+.c-due{background:#fde8e9;color:var(--r)}.c-ok{background:#e3f5ec;color:var(--g)}
+.sent{font-size:12px;color:var(--g);margin-top:4px}.acts{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.mini{background:none;color:var(--mut);font-weight:500;font-size:13px;padding:6px 4px;text-decoration:underline}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.top h2{font-size:18px}.csv{background:var(--y);color:var(--ink)}
+.empty{text-align:center;color:var(--mut);padding:30px}.foot{text-align:center;color:#5b6678;font-size:14px;margin:26px 0 8px}.foot a{color:#0B1220;font-weight:600}
+@media(max-width:800px){form,.row{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.acts{flex-wrap:wrap;justify-content:flex-start;grid-column:1/-1}}
+</style></head><body><div class="wrap">
+<h1>Fees Register</h1><p class="sub">Kis student ki kitne mahine ki fees baaki hai — ek nazar mein. Data sirf aapke phone/computer mein rehta hai.</p>
+<div class="stats"><div class="st tot"><b id="sTot">₹0</b><span>Kul fees baaki</span></div><div class="st"><b id="sDue">0</b><span>Kitne students par baaki</span></div><div class="st in"><b id="sIn">₹0</b><span>Is mahine jama hui</span></div><div class="st"><b id="sAll">0</b><span>Kul students</span></div></div>
+<form id="f"><div><label>Student ka naam</label><input id="name" required placeholder="jaise Aarav"></div><div><label>Parent ka mobile (10 ank)</label><input id="phone" required pattern="[0-9]{10}" placeholder="98XXXXXXXX"></div><div><label>Batch / class</label><input id="batch" required placeholder="Class 10"></div><div><label>Mahine ki fees (₹)</label><input id="fee" type="number" min="1" required placeholder="800"></div><div><label>Kis mahine se</label><input id="join" type="month" required></div><button class="add">+ Jodo</button></form>
+<div class="top"><h2>Students (sabse zyada baaki upar)</h2><button class="csv" id="csv">CSV download</button></div>
+<div id="list"></div>
+<p class="foot">Free tool by <a href="https://www.youtube.com/@dhandhaai">Dhandha AI</a> — YouTube pe dekhiye ye kaise bana.</p></div>
+<script>
+const KEY='fees-register-v1';let mem=[];const $=i=>document.getElementById(i);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return mem}};
+const save=d=>{mem=d;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}};
+const today=()=>{const d=new Date();const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const curMonth=()=>today().slice(0,7);
+const rs=n=>'₹'+Number(n).toLocaleString('en-IN');
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const mName=m=>MON[Number(m.slice(5,7))-1];
+const nextM=m=>{let y=Number(m.slice(0,4)),k=Number(m.slice(5,7))+1;if(k>12){k=1;y++}return y+'-'+String(k).padStart(2,'0')};
+// months from joining month up to the current month that have no payment yet (oldest first)
+function dueMonths(s){const out=[],end=curMonth(),paid=new Set(s.paid.map(p=>p.m));let m=s.join,guard=0;while(m<=end&&guard++<600){if(!paid.has(m))out.push(m);m=nextM(m)}return out}
+const dueAmt=s=>dueMonths(s).length*Number(s.fee);
+const monthsText=a=>a.length<=3?a.map(mName).join(', '):a.length+' mahine';
+function msg(s){const a=dueMonths(s);return `Namaste, ${s.name} ki ${a.length<=3?a.map(mName).join(a.length===2?' aur ':', '):a.length+' mahine'} ki fees ${rs(dueAmt(s))} baaki hai. Kripya jama kar dijiye. Dhanyavaad.`}
+function render(){const d=load().slice().sort((a,b)=>dueAmt(b)-dueAmt(a)||a.name.localeCompare(b.name)),cm=curMonth();
+$('sTot').textContent=rs(d.reduce((t,s)=>t+dueAmt(s),0));$('sDue').textContent=d.filter(s=>dueAmt(s)>0).length;$('sAll').textContent=d.length;
+$('sIn').textContent=rs(d.reduce((t,s)=>t+s.paid.filter(p=>p.on.slice(0,7)===cm).length*Number(s.fee),0));
+const L=$('list');if(!d.length){L.innerHTML='<div class="empty">Abhi koi student nahi. Upar se pehla student jodo.</div>';return}
+L.innerHTML=d.map(s=>{const a=dueMonths(s),last=s.paid[s.paid.length-1];
+const chip=a.length?`<span class="chip c-due">${monthsText(a)} · ${rs(dueAmt(s))} baaki</span>`:`<span class="chip c-ok">${mName(cm)} tak jama</span>`;
+return `<div class="row" data-id="${esc(s.id)}"><div><div class="nm">${esc(s.name)}</div><div class="ph">${esc(s.batch)} · ${esc(s.phone)}</div></div><div class="sv">${rs(s.fee)} / mahina</div><div>${chip}${s.sent&&a.length?`<div class="sent">Yaad dilaya: ${esc(s.sent)}</div>`:''}</div><div class="acts">${a.length?`<button class="wa" data-a="wa">WhatsApp yaad dilao</button><button class="pay" data-a="pay">${mName(a[0])} ki fees aayi</button>`:''}${last?'<button class="mini" data-a="undo">Galti? wapas</button>':''}<button class="mini" data-a="del">Hatao</button></div></div>`}).join('')}
+$('f').onsubmit=e=>{e.preventDefault();const d=load();d.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),name:$('name').value.trim(),phone:$('phone').value.trim(),batch:$('batch').value.trim(),fee:$('fee').value,join:$('join').value||curMonth(),paid:[],sent:''});save(d);e.target.reset();$('join').value=curMonth();render()};
+$('list').onclick=e=>{const a=e.target.dataset.a;if(!a)return;const id=e.target.closest('.row').dataset.id;let d=load();const s=d.find(x=>x.id===id);if(!s)return;
+if(a==='wa'){window.lastWaUrl='https://wa.me/91'+s.phone+'?text='+encodeURIComponent(msg(s));window.open(window.lastWaUrl,'_blank');s.sent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+if(a==='pay'){const m=dueMonths(s)[0];if(m)s.paid.push({m,on:today()})}
+if(a==='undo'){s.paid.pop()}
+if(a==='del'){if(!confirm(s.name+' ko list se hatana hai?'))return;d=d.filter(x=>x.id!==id)}
+save(d);render()};
+$('csv').onclick=()=>{const d=load();const rows=[['Naam','Parent mobile','Batch','Mahine ki fees','Kab se','Baaki mahine','Baaki rakam','Jama mahine']].concat(d.map(s=>[s.name,s.phone,s.batch,s.fee,s.join,dueMonths(s).join(' '),dueAmt(s),s.paid.map(p=>p.m).join(' ')]));
+const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='fees-register.csv';a.click()};
+$('join').value=curMonth();mem=load();render();
+</script></body></html>
