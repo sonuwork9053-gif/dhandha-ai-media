@@ -1,4 +1,4 @@
-# Video 04 upload sheet (prepared 5 Oct 2026, upload blocked by Zapier task limit)
+# Video 04 upload sheet (prepared 5 Oct 2026, upload blocked by Zapier task limit; re-voiced 6 Oct in Kokoro hf_beta, chapters below match the new file)
 
 Title: कोचिंग क्लास के लिए Free Fees Register | किसकी फ़ीस नहीं आई + WhatsApp से याद दिलाना (AI से बना)
 Short title: कोचिंग में किसकी फ़ीस बाकी? फ़्री Fees Register #Shorts
@@ -12,19 +12,19 @@ Then: a two-line summary, "Sample data" line, the chapters below, the prompt fro
 
 Chapters (from dur.json)
 0:00 किसकी फ़ीस अभी तक बाकी?
-0:14 इस वीडियो में क्या है
-0:29 मान लीजिए: घर की कोचिंग, तीन बैच
-0:49 सबसे ऊपर चार गिनती
-1:02 कुल बाकी फ़ीस एक नज़र में
-1:15 बच्चों की लिस्ट: कौन से महीने बाकी
-1:31 नया बच्चा जोड़ना
-1:45 नया महीना: फ़ीस अपने आप बाकी
-1:57 फ़ीस आई: एक बटन
-2:13 WhatsApp से पैरेंट को याद दिलाना
-2:35 पुराना तरीका या फ़ीस रजिस्टर
-2:51 डेटा, Excel डाउनलोड, और कौन इस्तेमाल कर सकता है
-3:10 प्रॉम्प्ट
-3:21 आपसे एक सवाल
+0:16 इस वीडियो में क्या है
+0:33 मान लीजिए: घर की कोचिंग, तीन बैच
+0:53 सबसे ऊपर चार गिनती
+1:07 कुल बाकी फ़ीस एक नज़र में
+1:21 बच्चों की लिस्ट: कौन से महीने बाकी
+1:38 नया बच्चा जोड़ना
+1:53 नया महीना: फ़ीस अपने आप बाकी
+2:06 फ़ीस आई: एक बटन
+2:26 WhatsApp से पैरेंट को याद दिलाना
+2:50 पुराना तरीका या फ़ीस रजिस्टर
+3:07 डेटा, Excel डाउनलोड, और कौन इस्तेमाल कर सकता है
+3:27 प्रॉम्प्ट
+3:40 आपसे एक सवाल
 
 Note: the seed data is relative to the recording month (Sep/Oct shown on screen). If the upload slips into November, the video is still correct as recorded; only re-render if the months on screen matter.
 The tool page was confirmed through the GitHub Pages deployment run (success) for the commit; a direct fetch of the page was not possible in the session.
